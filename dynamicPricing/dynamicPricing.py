@@ -18,17 +18,25 @@ def read_data(filename):
 #        print data
         return data
 
-# find the maximum load under the flat rate load profile    
-# input load profile
-# return the hour with maximum load
-def find_max(load_profile):
-        return np.where(load_profile == max(load_profile))[0][0] + 1
+# find the hour with maximum load
+# def find_max_hr(load_profile):
+#         return np.where(load_profile == max(load_profile))[0][0] + 1
+    
+# find the maximum load under the flat rate profile    
+# def find_max(data):
+#     Dmax = -np.inf
+#     for i in range(len(data)):
+#         if data[i] > Dmax:
+#             Dmax = data[i]
+#         else:
+#             pass
+#         return Dmax    
 
 # find total peak usage within the selected hours
-# input load profile and the definition of the hours. By default is the whold day
-def find_usage(load_profile,peak_hr=range(24)):
+# input load profile and the definition of the hours. By default is the whole day
+def find_usage(data,hr=range(24)):
     usage = 0.00
-    for i in peak_hr:
+    for i in hr:
         usage += data[i]
     return usage
 
@@ -42,10 +50,25 @@ def peak_price():
 
 # Execute
 data = read_data('DP_usage.csv')
-print find_max(data)
+
+# define parameters
 off_peak_hr = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 19, 20, 21, 22, 23])
 peak_hr = [10, 11, 12, 13, 14, 15, 16, 17]
-print find_usage(data)
-print find_usage(data,peak_hr)
-print find_usage(data,off_peak_hr)
+profit_margin = 0.13
+fixed_cost = 591606483
+# unit costs per MWh
+flat_rate = 0.09 * 1000 # per MWh
+deliver_cost = 50
+spot_price = 60000
+capacity = 13400 * 365
 
+x_p = 0.1   # temp
+x_op = 0.1  # temp
+v = x_p/x_op                    # peak/off-peak price ratio
+q = np.power(v, -0.016033333)   # usage elasticity
+g = np.power(v, -0.2133333)     # peak/off-peak usage factor
+l = np.power(v-1, 0.441066)/100 # reduction in peak load consumption
+
+# print find_usage(data)
+# print find_usage(data,peak_hr)
+# print find_usage(data,off_peak_hr)
