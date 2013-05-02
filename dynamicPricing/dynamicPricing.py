@@ -40,12 +40,25 @@ def find_usage(data,hr=range(24)):
         usage += data[i]
     return usage
 
-# find off-peak price if given peak price
-def off_peak_price():
+# assume bill neutrality
+# find off-peak price if given peak price (per MWh)
+def off_peak_price(x_p):
+    u_p = find_usage(data, peak_hr)
+    u_op = find_usage(data, off_peak_hr)
+    x_op = (flat_rate * (u_p + u_op) - x_p * u_p) / u_op
+    return x_op
+
+# find peak price if given off-peak price (per MWh)
+def peak_price(x_op):
+    u_p = find_usage(data, peak_hr)
+    u_op = find_usage(data, off_peak_hr)
+    x_p = (flat_rate * (u_p + u_op) - x_op * u_op) / u_p
+    return x_p
+
+def hourly_revenue(hour):
     pass
 
-# find peak price if given off-peak price
-def peak_price():
+def hourly_expense(hour):
     pass
 
 # Execute
@@ -62,13 +75,11 @@ deliver_cost = 50
 spot_price = 60000
 capacity = 13400 * 365
 
-x_p = 0.1   # temp
-x_op = 0.1  # temp
-v = x_p/x_op                    # peak/off-peak price ratio
-q = np.power(v, -0.016033333)   # usage elasticity
-g = np.power(v, -0.2133333)     # peak/off-peak usage factor
-l = np.power(v-1, 0.441066)/100 # reduction in peak load consumption
+# x_p = 0.1   # temp
+# x_op = 0.1  # temp
+# v = x_p/x_op                    # peak/off-peak price ratio
+# q = np.power(v, -0.016033333)   # usage elasticity
+# g = np.power(v, -0.2133333)     # peak/off-peak usage factor
+# l = np.power(v-1, 0.441066)/100 # reduction in peak load consumption
 
-# print find_usage(data)
-# print find_usage(data,peak_hr)
-# print find_usage(data,off_peak_hr)
+print off_peak_price(150)
