@@ -80,7 +80,7 @@ data = read_data('DP_usage.csv')
 # Unit testing off_peak_price, and find_usage function,
 # by setting peakprice=150 dollar per MWh
 print "Suppose peak price is 150 dollar per MWh"
-x_p = 150
+x_p = 120
 x_op = off_peak_price(x_p, data, peak_hr, off_peak_hr, flat_rate)
 v = x_p / x_op
 print "x_op=" + str(x_op)
