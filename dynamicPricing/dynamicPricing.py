@@ -6,7 +6,7 @@ import numpy as np
 def read_data(filename):
     with open(filename, 'r') as raw:
         reader = csv.reader(raw)
-        header = reader.next()
+        reader.next()
         data = np.zeros(24)
         try:
             for row in reader:
@@ -15,43 +15,28 @@ def read_data(filename):
             # Conversion failed
             print "Flat rate usage data error"
             exit()
-#        print data
         return data
-
-# find the hour with maximum load
-# def find_max_hr(load_profile):
-#         return np.where(load_profile == max(load_profile))[0][0] + 1
-    
-# find the maximum load under the flat rate profile    
-# def find_max(data):
-#     Dmax = -np.inf
-#     for i in range(len(data)):
-#         if data[i] > Dmax:
-#             Dmax = data[i]
-#         else:
-#             pass
-#         return Dmax    
 
 # find total peak usage within the selected hours
 # input load profile and the definition of the hours. By default is the whole day
-def find_usage(data,hr=range(24)):
+def find_usage(load_profile,hr=range(24)):
     usage = 0.00
     for i in hr:
-        usage += data[i]
+        usage += load_profile[i]
     return usage
 
 # assume bill neutrality
-# find off-peak price if given peak price (per MWh)
-def off_peak_price(x_p):
-    u_p = find_usage(data, peak_hr)
-    u_op = find_usage(data, off_peak_hr)
+# find off-peak price given original load profile, peak price, peak and off_peak_hr, and flat price (per MWh)
+def off_peak_price(x_p, load_profile, peak_hr, off_peak_hr, flat_rate):
+    u_p = find_usage(load_profile, peak_hr)
+    u_op = find_usage(load_profile, off_peak_hr)
     x_op = (flat_rate * (u_p + u_op) - x_p * u_p) / u_op
     return x_op
 
-# find peak price if given off-peak price (per MWh)
-def peak_price(x_op):
-    u_p = find_usage(data, peak_hr)
-    u_op = find_usage(data, off_peak_hr)
+# find off-peak price given original load profile, peak price, peak and off_peak_hr, and flat price (per MWh)def peak_price(data, x_p, peak_hr, off_peak_hr, flat_rate):
+def peak_price(x_op, load_profile, peak_hr, off_peak_hr, flat_rate):
+    u_p = find_usage(load_profile, peak_hr)
+    u_op = find_usage(load_profile, off_peak_hr)
     x_p = (flat_rate * (u_p + u_op) - x_op * u_op) / u_p
     return x_p
 
@@ -61,25 +46,44 @@ def hourly_revenue(hour):
 def hourly_expense(hour):
     pass
 
-# Execute
-data = read_data('DP_usage.csv')
 
 # define parameters
 off_peak_hr = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 19, 20, 21, 22, 23])
-peak_hr = [10, 11, 12, 13, 14, 15, 16, 17]
+peak_hr = np.array([10, 11, 12, 13, 14, 15, 16, 17])
 profit_margin = 0.13
 fixed_cost = 591606483
+# the daily usage elasticity
+def q(v):
+    return np.power(v, -0.016033333)
+# the peak usage/off-peak usage changes
+def g(v):
+    return np.power(v, -0.2133333)
+# reduction in peak load consumption as a percentage of the maximum load under the flat rate profile
+def l(v):
+    return np.power(v-1, 0.441066)/100
 # unit costs per MWh
 flat_rate = 0.09 * 1000 # per MWh
 deliver_cost = 50
 spot_price = 60000
 capacity = 13400 * 365
 
-# x_p = 0.1   # temp
-# x_op = 0.1  # temp
-# v = x_p/x_op                    # peak/off-peak price ratio
-# q = np.power(v, -0.016033333)   # usage elasticity
-# g = np.power(v, -0.2133333)     # peak/off-peak usage factor
-# l = np.power(v-1, 0.441066)/100 # reduction in peak load consumption
-
-print off_peak_price(150)
+# Unit testing read_data function
+data = read_data('DP_usage.csv')
+# Unit testing off_peak_price, and find_usage function,
+# by setting peakprice=150 dollar per MWh
+print "Suppose peak price is 150 dollar per MWh"
+x_p=150
+x_op=off_peak_price(x_p, data, peak_hr, off_peak_hr, flat_rate)
+v=x_p/x_op
+print "x_op="+ str(x_op)
+print "v="+ str(v)
+# total peak usage under the flat rate
+D_p=find_usage(data,peak_hr)
+# total off-peak usage under the flat rate
+D_op=find_usage(data,off_peak_hr)
+# total peak usage under the TOU rate
+U_p=D_p*l(v)
+# total off-peak usage under the TOU rate
+U_op=U_p*D_op/D_p/g(v)
+print "U_p="+str(U_p)
+print "U_op="+str(U_op)
