@@ -42,17 +42,17 @@ def peak_price(x_op, load_profile, peak_hr, off_peak_hr, flat_rate):
 
 # find the new load profile under the peak and off-peak price
 def newLoad(load_profile, peak_hr, off_peak_hr, v):
-    new_load_profile=np.empty_like(load_profile)
+    new_load_profile = np.empty_like(load_profile)
     # total peak usage under the flat rate
     D_p = find_usage(data, peak_hr)
     # total off-peak usage under the flat rate
     D_op = find_usage(data, off_peak_hr)
     # total peak usage under the TOU rate
-    new_load_profile[peak_hr]=load_profile[peak_hr]*(1-l(v))
-    U_p = D_p * (1-l(v))
+    U_p = (D_p + D_op) * q(v) / (1 + D_op / D_p / g(v))
     # total off-peak usage under the TOU rate
-    U_op = U_p * D_op / D_p / g(v)
-    new_load_profile[off_peak_hr]=U_op/set(off_peak_hr).__len__()
+    U_op = (D_p + D_op) * q(v) / (1 + D_p * g(v) / D_op)
+    new_load_profile[peak_hr] = U_p / set(peak_hr).__len__()
+    new_load_profile[off_peak_hr] = U_op / set(off_peak_hr).__len__()
     return new_load_profile
 
 # define parameters
@@ -86,6 +86,6 @@ v = x_p / x_op
 print "x_op=" + str(x_op)
 print "v=" + str(v)
 print "new load profile"
-new_load_profile=newLoad(data, peak_hr, off_peak_hr, v)
+new_load_profile = newLoad(data, peak_hr, off_peak_hr, v)
 for i in range(24):
-    print "hour #"+str(i+1)+":"+str(new_load_profile[i])
+    print "hour #" + str(i + 1) + ":" + str(new_load_profile[i])
