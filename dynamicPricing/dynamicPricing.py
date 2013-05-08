@@ -89,3 +89,4 @@ print "new load profile"
 new_load_profile = newLoad(data, peak_hr, off_peak_hr, v)
 for i in range(24):
     print "hour #" + str(i + 1) + ":" + str(new_load_profile[i])
+print capacity
