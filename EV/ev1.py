@@ -7,21 +7,22 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 ###################
-## connect to db ##
+# # connect to db ##
 ###################
-con = connect(user = "postgres", host = "localhost", database = "EV")
+con = connect(user="postgres", host="localhost", database="EV")
 
 # select all columns from database as lists
-idnum = np.array(psql.tquery('select id from ev_charging;', con=con))
-startday = np.array(psql.tquery('select startday from ev_charging;', con=con))
-starttime = np.array(psql.tquery('select starttime from ev_charging;', con=con))
-timezone = np.array(psql.tquery('select timezone from ev_charging;', con=con))
-duration = np.array(psql.tquery('select duration from ev_charging;', con=con))
-energy = np.array(psql.tquery('select energy from ev_charging;', con=con))
-ghgsavings = np.array(psql.tquery('select ghgsavings from ev_charging;', con=con))
-englevel = np.array(psql.tquery('select englevel from ev_charging;', con=con))
-address = np.array(psql.tquery('select address from ev_charging;', con=con))
-data = np.dstack((startday, starttime, timezone, duration, energy, ghgsavings, englevel, address))
+frame = pd.DataFrame(
+    {'idnum': np.array(psql.tquery('select id from ev_charging;', con=con)),
+    'startday' : np.array(psql.tquery('select startday from ev_charging;', con=con)),
+    'starttime' : np.array(psql.tquery('select starttime from ev_charging;', con=con)),
+    'timezone' : np.array(psql.tquery('select timezone from ev_charging;', con=con)),
+    'duration' : np.array(psql.tquery('select duration from ev_charging;', con=con)),
+    'energy' : np.array(psql.tquery('select energy from ev_charging;', con=con)),
+    'ghgsavings' : np.array(psql.tquery('select ghgsavings from ev_charging;', con=con)),
+    'englevel' : np.array(psql.tquery('select englevel from ev_charging;', con=con)),
+    'address' : np.array(psql.tquery('select address from ev_charging;', con=con))
+})
 # print data
 
 # clean address, then specify city, state, zip code
@@ -29,8 +30,8 @@ city = []
 statezip = []
 state = []
 zipcode = []
-for i in range(0, len(address)):
-    string = address[i].split(', ')
+for i in range(len(frame['address'])):
+    string = frame['address'][i].split(', ')
     if string[2] != 'Bourbonnais':
         city.append(string[1])
         statezip.append(string[2])
@@ -62,8 +63,8 @@ for key in ct_city:
 
 # calculating total energy by date
 energy_by_day = psql.tquery('select startday, sum(energy) from ev_charging group by startday;', con=con)
-date = [x for (x,y) in energy_by_day]
-epd = [y for (x,y) in energy_by_day]
+date = [x for (x, y) in energy_by_day]
+epd = [y for (x, y) in energy_by_day]
 
 # calculate charging durations in minutes by date
 # duration_by_day = psql.tquery('select startday, extract(minutes from sum(duration::interval))+extract(hours from sum(duration::interval))*60 as "Duration" FROM ev_charging group by startday;', con=con)
@@ -71,18 +72,18 @@ epd = [y for (x,y) in energy_by_day]
 # duration = [y for (x,y) in duration_by_day]
 
 ####################
-## start plotting ##
+# # start plotting ##
 ####################
 width = 0.35
 ind = np.arange(len(state_name))
-plt.figure(1)                # the first figure
+plt.figure(1)  # the first figure
 plt.bar(ind, state_num, width=width, align='center', color='red')
 plt.xticks(ind, state_name)
 plt.title("Number of Chargings by State")
 
-plt.figure(2)                # a second figure
+plt.figure(2)  # a second figure
 plt.scatter(date, epd)
-plt.xticks(rotation = 25)
+plt.xticks(rotation=25)
 plt.title("Energy Consumed per Day")
-plt.ylim(-10,350)
+plt.ylim(-10, 350)
 plt.show()
